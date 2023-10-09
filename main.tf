@@ -30,17 +30,6 @@ module "web_vpc" {
   }
 }
 
-resource "aws_instance" "web" {
-  ami           = data.aws_ami.app_ami.id
-  instance_type = var.instance_type
-
-  subnet_id              = module.web_vpc.public_subnets[0]
-  vpc_security_group_ids = [module.web_sg.security_group_id]
-  tags = {
-    Name = "HelloWorld"
-  }
-}
-
 
 module "web_sg" {
   source = "terraform-aws-modules/security-group/aws"
@@ -61,7 +50,7 @@ module "web_alb" {
   source  = "terraform-aws-modules/alb/aws"
   version = "~> 8.0"
 
-  name = "my-alb"
+  name = "web-alb"
 
   load_balancer_type = "application"
 
@@ -76,13 +65,6 @@ module "web_alb" {
       backend_protocol = "HTTP"
       backend_port     = 80
       target_type      = "instance"
-      targets = {
-        my_target = {
-          target_id = aws_instance.web.id
-          port = 80
-        }
-
-      }
     }
   ]
 
@@ -97,4 +79,19 @@ module "web_alb" {
   tags = {
     Environment = "dev"
   }
+}
+
+module "autoscaling" {
+  source = "terraform-aws-modules/autoscaling/aws"
+  version = "6.5.2"
+
+  name = "web"
+  min_size = 1
+  max_size = 2
+
+  vpc_zone_identifier = module.web_vpc.public_subnets
+  target_group_arns = module.web_alb.target_group_arns
+  security_groups     = [module.web_sg.security_group_id]
+  instance_type       = var.instance_type
+  image_id            = data.aws_ami.app_ami.id
 }
