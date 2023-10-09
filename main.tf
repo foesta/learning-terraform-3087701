@@ -66,7 +66,7 @@ module "web_alb" {
   load_balancer_type = "application"
 
   vpc_id             = module.web_vpc.vpc_id
-  subnets            = module.web_sg.public_subnets
+  subnets            = module.web_vpc.public_subnets
   security_groups    = [module.web_sg.security_group_id]
 
 
