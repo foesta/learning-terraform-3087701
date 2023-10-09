@@ -46,7 +46,7 @@ module "web_sg" {
   version = "5.1.0"
   name = "web_new"
 
-  vpc_id = module.web_vpc.public_subnets[0]
+  vpc_id = module.web_vpc.vpc_id
   
   ingress_rules       = ["http-80-tcp", "https-443-tcp"]
   ingress_cidr_blocks = ["0.0.0.0/0"]
